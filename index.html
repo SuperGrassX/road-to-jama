@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<title>Road to Jama</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Mono:wght@400;700&display=swap">
+<style>
+:root {
+  --bg: #0d0b09;
+  --fg: #f4ece0;
+  --orange: #ff6a13;
+  --orange-dim: #b5470a;
+  --paper: #f4ece0;
+  --ink: #0d0b09;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font: 14px/1.5 "Space Mono", ui-monospace, monospace;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-top: 20px;
+  padding-bottom: 24px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+h1, h2 {
+  font-family: "Anton", Impact, sans-serif;
+  font-weight: 400;
+  text-transform: uppercase;
+  line-height: 0.95;
+  margin: 0;
+  text-wrap: balance;
+  text-align: center;
+}
+h1 { font-size: clamp(34px, 9vw, 56px); color: var(--orange); text-shadow: 3px 3px 0 #000; }
+h2 { font-size: clamp(28px, 7vw, 44px); color: var(--orange); text-shadow: 3px 3px 0 #000; }
+.wrap { width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 14px; }
+.stage {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  border: 2px solid var(--orange);
+  box-shadow: 6px 6px 0 var(--orange-dim);
+  background: #151110;
+  aspect-ratio: 480 / 300;
+  touch-action: none;
+  user-select: none;
+}
+.welcome { position: relative; width: 100%; max-width: 480px; }
+.welcome img { display: block; width: 100%; height: auto; border: 2px solid var(--orange); box-shadow: 6px 6px 0 var(--orange-dim); }
+.press { position: absolute; left: 75%; top: 56%; width: 16%; height: 11%; background: transparent; border: 0; border-radius: 50%; cursor: pointer; padding: 0; box-shadow: none; }
+.press:active { transform: none; box-shadow: none; }
+.press:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+.press::before { content: ""; position: absolute; inset: -8px; border: 3px solid var(--orange); border-radius: 50%; pointer-events: none; animation: pulse 1.6s ease-out infinite; }
+@keyframes pulse { 0% { transform: scale(.85); opacity: 1; } 100% { transform: scale(1.3); opacity: 0; } }
+.cue { position: absolute; left: 72%; top: 24%; background: var(--orange); color: #000; font: 700 13px "Space Mono", monospace; text-transform: uppercase; letter-spacing: .06em; padding: 4px 8px; pointer-events: none; box-shadow: 3px 3px 0 #000; }
+.curve { position: absolute; left: 80%; top: 30%; width: 22%; height: auto; overflow: visible; pointer-events: none; }
+.curve path, .curve polyline { fill: none; stroke: var(--orange); stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(2px 2px 0 #000); }
+@media (prefers-reduced-motion: reduce) { .press::before { animation: none; } }
+canvas { width: 100%; height: 100%; display: block; }
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(13,11,9,.88);
+  text-align: center;
+}
+.overlay[hidden] { display: none; }
+.paper {
+  background: var(--paper);
+  color: var(--ink);
+  padding: 14px 16px;
+  border: 2px dashed var(--ink);
+  font-family: "Anton", Impact, sans-serif;
+  text-transform: uppercase;
+  font-size: clamp(20px, 5.5vw, 30px);
+  line-height: 1.1;
+}
+.paper span { display: block; }
+.small { color: var(--fg); opacity: .8; font-size: 12px; }
+button {
+  font: 700 14px "Space Mono", ui-monospace, monospace;
+  background: var(--orange);
+  color: #000;
+  border: 0;
+  padding: 12px 18px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  box-shadow: 4px 4px 0 var(--orange-dim);
+}
+button:active { transform: translate(2px,2px); box-shadow: 2px 2px 0 var(--orange-dim); }
+button:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; }
+.ghost {
+  background: transparent;
+  color: var(--orange);
+  border: 1px solid var(--orange);
+  box-shadow: none;
+}
+.ghost:active { transform: none; }
+.rsvp {
+  font-family: "Anton", Impact, sans-serif;
+  font-size: clamp(22px, 6vw, 32px);
+  color: var(--orange);
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+.hint { font-size: 12px; color: var(--mute, #8a7f74); text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+
+  <div class="welcome" id="welcome">
+    <img src="welcome.png" alt="Yet Another Teenage Party. Oslava 18 rokov, 28.11., 17:00, Klub JAMA.">
+    <button class="press" id="start" type="button" aria-label="Press start"></button>
+    <span class="cue">Press start</span>
+    <svg class="curve" viewBox="0 0 100 100" aria-hidden="true">
+      <path d="M70 8 Q98 40 40 88"/>
+      <polyline points="50,82 40,88 34,76"/>
+    </svg>
+  </div>
+  <p class="hint" id="hint">Klikni, ťukni alebo stlač medzerník na skok. Zober 1UP a dostaň sa k dverám.</p>
+
+  <div class="stage" id="stage" hidden>
+    <canvas id="c" aria-label="Road to Jama minigame"></canvas>
+
+    <div class="overlay" id="over" hidden>
+      <h2>Spadol si</h2>
+      <p class="small" id="overScore"></p>
+      <button id="retry" type="button">Skúsiť znova</button>
+    </div>
+
+    <div class="overlay" id="win" hidden>
+      <h2>Dorazil si do JAMY</h2>
+      <div class="paper">
+        <span>Oslava 18 rokov</span>
+        <span>28.11. · 17:00</span>
+        <span>Klub JAMA</span>
+      </div>
+      <p class="rsvp">Potvrď mi účasť</p>
+      <button class="ghost" id="again" type="button">Hrať znova</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var W = 480, H = 300, GY = 240;
+  var cv = document.getElementById('c');
+  var ctx = cv.getContext('2d');
+  cv.width = W; cv.height = H;
+
+  var menu = {};
+  var over = document.getElementById('over');
+  var win = document.getElementById('win');
+  var overScore = document.getElementById('overScore');
+
+  var state = 'menu';
+  var dist, speed, score, lives, obstacles, pickups, nextOb, nextPu, doorShown, doorX, player, invuln, popups, frame;
+  var GOAL = 2600;
+  var best = 0;
+
+  function reset() {
+    dist = 0; speed = 3; score = 0; lives = 3;
+    obstacles = []; pickups = []; popups = [];
+    nextOb = 60; nextPu = 90;
+    doorShown = false; doorX = W + 60;
+    player = { y: GY, vy: 0, onGround: true };
+    invuln = 0; frame = 0;
+  }
+
+  function show(el) {
+    menu.hidden = el !== menu;
+    over.hidden = el !== over;
+    win.hidden = el !== win;
+  }
+
+  function start() {
+    reset();
+    state = 'play';
+    show(null);
+    document.getElementById('welcome').hidden = true;
+    document.getElementById('hint').hidden = true;
+    document.getElementById('stage').hidden = false;
+  }
+
+  function jump() {
+    if (state !== 'play') return;
+    if (player.onGround) {
+      player.vy = -13;
+      player.onGround = false;
+    }
+  }
+
+  function lose() {
+    lives--;
+    invuln = 70;
+    if (lives <= 0) {
+      state = 'over';
+      best = Math.max(best, score);
+      overScore.textContent = 'Skóre: ' + score + (best > score ? ' · Najlepšie: ' + best : ' · Nový rekord');
+      show(over);
+    }
+  }
+
+  function win_() {
+    state = 'win';
+    best = Math.max(best, score);
+    show(win);
+  }
+
+  function update() {
+    frame++;
+    dist += speed;
+    speed = Math.min(5.5, 3 + dist / 1500);
+
+    if (!doorShown && dist >= GOAL) { doorShown = true; }
+    if (doorShown) {
+      doorX -= speed;
+      if (doorX <= 120) { win_(); return; }
+    }
+
+    // player physics
+    player.vy += 0.75;
+    player.y += player.vy;
+    if (player.y >= GY) { player.y = GY; player.vy = 0; player.onGround = true; }
+
+    // spawn obstacles until the door shows
+    if (!doorShown) {
+      nextOb--;
+      if (nextOb <= 0) {
+        var kind = Math.random() < 0.6 ? 'cone' : 'bench';
+        var w = kind === 'cone' ? 22 : 46;
+        var h = kind === 'cone' ? 30 : 26;
+        obstacles.push({ x: W + 10, w: w, h: h, kind: kind });
+        nextOb = 70 + Math.random() * 70 - Math.min(30, speed * 3);
+      }
+      nextPu--;
+      if (nextPu <= 0) {
+        pickups.push({ x: W + 10, y: GY - 60 - Math.random() * 60, got: false });
+        nextPu = 110 + Math.random() * 90;
+      }
+    }
+
+    for (var i = obstacles.length - 1; i >= 0; i--) {
+      var o = obstacles[i];
+      o.x -= speed;
+      if (o.x + o.w < -10) obstacles.splice(i, 1);
+    }
+    for (var j = pickups.length - 1; j >= 0; j--) {
+      var p = pickups[j];
+      p.x -= speed;
+      if (p.x < -30) pickups.splice(j, 1);
+    }
+
+    // collisions
+    var px1 = 66, px2 = 100;
+    var py1 = player.y - 34, py2 = player.y;
+    if (invuln > 0) invuln--;
+    if (invuln === 0) {
+      for (var k = 0; k < obstacles.length; k++) {
+        var ob = obstacles[k];
+        var oy = GY - ob.h;
+        if (ob.x < px2 && ob.x + ob.w > px1 && oy < py2 && GY > py1) {
+          lose();
+          if (state !== 'play') return;
+          break;
+        }
+      }
+    }
+    for (var m = 0; m < pickups.length; m++) {
+      var pu = pickups[m];
+      if (!pu.got && pu.x < px2 && pu.x + 34 > px1 && pu.y < py2 && pu.y + 18 > py1) {
+        pu.got = true;
+        score += 100;
+        popups.push({ x: pu.x, y: pu.y, t: 40 });
+      }
+    }
+    for (var n = popups.length - 1; n >= 0; n--) {
+      popups[n].t--; popups[n].y -= 0.6;
+      if (popups[n].t <= 0) popups.splice(n, 1);
+    }
+    score += 1;
+  }
+
+  function drawSkater() {
+    var x = 70, y = player.y;
+    var flash = invuln > 0 && Math.floor(invuln / 5) % 2 === 0;
+    if (flash) return;
+    // board
+    ctx.fillStyle = '#0d0b09';
+    ctx.fillRect(x, y - 3, 34, 4);
+    ctx.fillStyle = '#ff6a13';
+    ctx.fillRect(x, y - 3, 34, 1);
+    // wheels
+    ctx.fillStyle = '#f4ece0';
+    ctx.fillRect(x + 4, y + 1, 3, 3);
+    ctx.fillRect(x + 27, y + 1, 3, 3);
+    // legs
+    ctx.fillStyle = '#0d0b09';
+    ctx.fillRect(x + 12, y - 16, 4, 13);
+    ctx.fillRect(x + 20, y - 16, 4, 13);
+    // body
+    ctx.fillStyle = '#ff6a13';
+    ctx.fillRect(x + 10, y - 30, 16, 16);
+    // arm up
+    ctx.fillRect(x + 24, y - 28, 12, 4);
+    // head
+    ctx.fillStyle = '#f4ece0';
+    ctx.beginPath(); ctx.arc(x + 18, y - 36, 6, 0, Math.PI * 2); ctx.fill();
+    // cap
+    ctx.fillStyle = '#0d0b09';
+    ctx.fillRect(x + 12, y - 40, 12, 3);
+  }
+
+  function drawCone(o) {
+    var x = o.x, y = GY - o.h;
+    ctx.fillStyle = '#ff6a13';
+    ctx.beginPath();
+    ctx.moveTo(x + o.w / 2, y);
+    ctx.lineTo(x + o.w, GY);
+    ctx.lineTo(x, GY);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#f4ece0';
+    ctx.fillRect(x + 5, y + 12, o.w - 10, 4);
+    ctx.fillStyle = '#0d0b09';
+    ctx.fillRect(x - 2, GY - 2, o.w + 4, 2);
+  }
+
+  function drawBench(o) {
+    var x = o.x, y = GY - o.h;
+    ctx.fillStyle = '#f4ece0';
+    ctx.fillRect(x, y, o.w, 6);
+    ctx.fillStyle = '#0d0b09';
+    ctx.fillRect(x + 4, y + 6, 4, o.h - 6);
+    ctx.fillRect(x + o.w - 8, y + 6, 4, o.h - 6);
+  }
+
+  function drawDoor() {
+    var x = doorX, y = GY - 110;
+    ctx.fillStyle = '#0d0b09';
+    ctx.fillRect(x, y, 80, 110);
+    ctx.strokeStyle = '#ff6a13';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(x + 1.5, y + 1.5, 77, 107);
+    ctx.fillStyle = '#ff6a13';
+    ctx.font = '26px Anton, Impact, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('JAMA', x + 40, y + 36);
+    ctx.textAlign = 'left';
+  }
+
+  function drawPickup(p) {
+    if (p.got) return;
+    ctx.fillStyle = '#f4ece0';
+    ctx.fillRect(p.x, p.y, 34, 18);
+    ctx.fillStyle = '#ff6a13';
+    ctx.fillRect(p.x + 2, p.y + 2, 30, 14);
+    ctx.fillStyle = '#0d0b09';
+    ctx.font = '700 11px "Space Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('1UP', p.x + 17, p.y + 13);
+    ctx.textAlign = 'left';
+  }
+
+  function draw() {
+    // sky
+    ctx.fillStyle = '#0d0b09';
+    ctx.fillRect(0, 0, W, H);
+    // sun with stripes
+    ctx.fillStyle = '#b5470a';
+    ctx.beginPath(); ctx.arc(W - 90, 90, 48, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#0d0b09';
+    for (var s = 0; s < 6; s++) ctx.fillRect(W - 140, 100 + s * 8, 100, 2 + s * 0.4);
+    // skyline parallax
+    var off = (dist * 0.3) % 120;
+    ctx.fillStyle = '#1f1914';
+    for (var b = -1; b < 6; b++) {
+      var bx = b * 120 - off;
+      var bh = 60 + ((b * 37 + 11) % 5) * 14;
+      ctx.fillRect(bx, GY - bh, 90, bh);
+    }
+    // ground
+    ctx.fillStyle = '#151110';
+    ctx.fillRect(0, GY, W, H - GY);
+    ctx.fillStyle = '#ff6a13';
+    ctx.fillRect(0, GY, W, 2);
+    // ground lines
+    ctx.fillStyle = '#2a2420';
+    var gOff = dist % 40;
+    for (var g = -1; g < 14; g++) ctx.fillRect(g * 40 - gOff, GY + 14, 18, 2);
+
+    for (var q = 0; q < pickups.length; q++) drawPickup(pickups[q]);
+    for (var r = 0; r < obstacles.length; r++) {
+      var o = obstacles[r];
+      if (o.kind === 'cone') drawCone(o); else drawBench(o);
+    }
+    if (doorShown) drawDoor();
+    drawSkater();
+
+    // popups
+    ctx.fillStyle = '#f4ece0';
+    ctx.font = '700 14px "Space Mono", monospace';
+    for (var pp = 0; pp < popups.length; pp++) {
+      ctx.fillText('+100', popups[pp].x, popups[pp].y);
+    }
+
+    // HUD
+    ctx.fillStyle = '#f4ece0';
+    ctx.font = '700 14px "Space Mono", monospace';
+    ctx.fillText('Skóre ' + score, 12, 22);
+    ctx.textAlign = 'right';
+    ctx.fillText('Životy ' + lives, W - 12, 22);
+    ctx.textAlign = 'left';
+
+    // progress bar
+    var pct = Math.min(1, dist / GOAL);
+    ctx.fillStyle = '#2a2420';
+    ctx.fillRect(12, 32, 160, 6);
+    ctx.fillStyle = '#ff6a13';
+    ctx.fillRect(12, 32, 160 * pct, 6);
+  }
+
+  function loop() {
+    if (state === 'play') update();
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  // input
+  function onPress(e) {
+    if (e) e.preventDefault();
+    if (state === 'play') jump();
+  }
+  cv.addEventListener('pointerdown', onPress);
+  document.getElementById('stage').addEventListener('pointerdown', function (e) {
+    if (e.target.tagName === 'BUTTON') return;
+    if (state === 'play') onPress(e);
+  });
+  window.addEventListener('keydown', function (e) {
+    if (e.code === 'Space' || e.code === 'ArrowUp') {
+      e.preventDefault();
+      if (state === 'play') jump();
+    }
+  });
+
+  document.getElementById('start').addEventListener('click', start);
+  document.getElementById('retry').addEventListener('click', start);
+  document.getElementById('again').addEventListener('click', start);
+
+  reset();
+  show(menu);
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
