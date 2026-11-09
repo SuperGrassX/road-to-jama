@@ -63,6 +63,8 @@ h2 { font-size: clamp(28px, 7vw, 44px); color: var(--orange); text-shadow: 3px 3
 .press::before { content: ""; position: absolute; inset: -8px; border: 3px solid var(--orange); border-radius: 50%; pointer-events: none; animation: pulse 1.6s ease-out infinite; }
 @keyframes pulse { 0% { transform: scale(.85); opacity: 1; } 100% { transform: scale(1.3); opacity: 0; } }
 .cue { position: absolute; left: 72%; top: 24%; background: var(--orange); color: #000; font: 700 13px "Space Mono", monospace; text-transform: uppercase; letter-spacing: .06em; padding: 4px 8px; pointer-events: none; box-shadow: 3px 3px 0 #000; }
+.dress { margin: 0; padding: 10px 12px; background: var(--orange); color: #000; text-align: center; font: 700 14px "Space Mono", monospace; text-transform: uppercase; letter-spacing: .08em; box-shadow: 6px 6px 0 var(--orange-dim); }
+.dress b { font-family: "Anton", Impact, sans-serif; font-weight: 400; font-size: 22px; letter-spacing: .04em; display: block; }
 .curve { position: absolute; left: 80%; top: 30%; width: 22%; height: auto; overflow: visible; pointer-events: none; }
 .curve path, .curve polyline { fill: none; stroke: var(--orange); stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(2px 2px 0 #000); }
 @media (prefers-reduced-motion: reduce) { .press::before { animation: none; } }
@@ -135,6 +137,7 @@ button:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; }
       <polyline points="50,82 40,88 34,76"/>
     </svg>
   </div>
+  <p class="dress" id="dress"><b>Dress code</b>Štýl 2000 · skate · oversize · flanel · šiltovka</p>
   <p class="hint" id="hint">Klikni, ťukni alebo stlač medzerník na skok. Zober 1UP a dostaň sa k dverám.</p>
 
   <div class="stage" id="stage" hidden>
@@ -197,6 +200,7 @@ button:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; }
     show(null);
     document.getElementById('welcome').hidden = true;
     document.getElementById('hint').hidden = true;
+    document.getElementById('dress').hidden = true;
     document.getElementById('stage').hidden = false;
   }
 
