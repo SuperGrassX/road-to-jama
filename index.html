@@ -57,7 +57,7 @@ h2 { font-size: clamp(28px, 7vw, 44px); color: var(--orange); text-shadow: 3px 3
 }
 .welcome { position: relative; width: 100%; max-width: 480px; }
 .welcome img { display: block; width: 100%; height: auto; border: 2px solid var(--orange); box-shadow: 6px 6px 0 var(--orange-dim); }
-.press { position: absolute; left: 75%; top: 56%; width: 16%; height: 11%; background: radial-gradient(circle at 35% 30%, #ffb27a 0%, #ff6a13 45%, #b5470a 100%); border: 0; border-radius: 50%; cursor: pointer; padding: 0; animation: glow 1.6s ease-in-out infinite; }
+.press { position: absolute; left: 69%; top: 53%; width: 22%; height: 15%; background: radial-gradient(circle at 35% 30%, #ffb27a 0%, #ff6a13 45%, #b5470a 100%); border: 3px solid #fff; border-radius: 50%; cursor: pointer; padding: 0; color: #000; font: 700 15px "Space Mono", monospace; text-transform: uppercase; letter-spacing: .02em; display: flex; align-items: center; justify-content: center; animation: glow 1.6s ease-in-out infinite; }
 @keyframes glow {
   0%, 100% { box-shadow: inset -4px -6px 0 rgba(0,0,0,.35), inset 3px 4px 0 rgba(255,255,255,.4), 0 6px 0 #6b2a07, 0 0 18px 4px rgba(255,106,19,.45); }
   50% { box-shadow: inset -4px -6px 0 rgba(0,0,0,.35), inset 3px 4px 0 rgba(255,255,255,.4), 0 6px 0 #6b2a07, 0 0 34px 12px rgba(255,106,19,.85); }
@@ -76,6 +76,13 @@ h2 { font-size: clamp(28px, 7vw, 44px); color: var(--orange); text-shadow: 3px 3
 .board .msg { color: var(--mute, #8a7f74); font-size: 12px; margin: 8px 0 0; }
 .saveBox { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; }
 .saveBox[hidden] { display: none; }
+.rsvpBox { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; }
+.rsvpBox[hidden] { display: none; }
+.finishBox { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; }
+.finishBox[hidden] { display: none; }
+.finishBox button:disabled { opacity: .5; cursor: default; }
+.rsvpLabel { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.rsvpLabel input { width: 20px; height: 20px; accent-color: var(--orange); }
 .nameIn { font: 700 14px "Space Mono", monospace; width: 220px; max-width: 100%; padding: 10px; background: #0d0b09; color: var(--fg); border: 2px solid var(--orange); }
 .curve { position: absolute; left: 80%; top: 30%; width: 22%; height: auto; overflow: visible; pointer-events: none; }
 .curve path, .curve polyline { fill: none; stroke: var(--orange); stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(2px 2px 0 #000); }
@@ -143,8 +150,7 @@ body.playing { touch-action: none; user-select: none; -webkit-user-select: none;
 
   <div class="welcome" id="welcome">
     <img src="welcome.png" alt="Yet Another Teenage Party. Oslava 18 rokov, 28.11., 17:00, Klub JAMA.">
-    <button class="press" id="start" type="button" aria-label="Press start"></button>
-    <span class="cue">Press start</span>
+    <button class="press" id="start" type="button">Press start</button>
     <svg class="curve" viewBox="0 0 100 100" aria-hidden="true">
       <path d="M70 8 Q98 40 40 88"/>
       <polyline points="50,82 40,88 34,76"/>
@@ -159,17 +165,24 @@ body.playing { touch-action: none; user-select: none; -webkit-user-select: none;
     <p class="msg" id="boardMsg">Načítavam…</p>
   </section>
 
+  <section class="board" id="guests">
+    <h2>Ideme</h2>
+    <ol id="guestList"></ol>
+    <p class="msg" id="guestMsg">Načítavam…</p>
+  </section>
+
   <div class="stage" id="stage" hidden>
     <canvas id="c" aria-label="Road to Jama minigame"></canvas>
 
     <div class="overlay" id="over" hidden>
       <h2>Spadol si</h2>
       <p class="small" id="overScore"></p>
-      <div class="saveBox">
-        <input class="nameIn" maxlength="12" placeholder="Tvoje meno">
-        <button class="saveBtn" type="button">Ulož skóre</button>
-        <p class="small saveMsg"></p>
-      </div>
+      <div class="finishBox">
+          <input class="nameIn" maxlength="30" placeholder="Tvoje meno">
+          <label class="rsvpLabel"><input type="checkbox" class="rsvpCheck"> Idem na párty</label>
+          <button class="saveBtn" type="button">Ulož skóre</button>
+          <p class="small saveMsg"></p>
+        </div>
       <button id="retry" type="button">Skúsiť znova</button>
     </div>
 
@@ -181,11 +194,12 @@ body.playing { touch-action: none; user-select: none; -webkit-user-select: none;
         <span>Klub JAMA</span>
       </div>
       <p class="rsvp">Potvrď mi účasť</p>
-      <div class="saveBox">
-        <input class="nameIn" maxlength="12" placeholder="Tvoje meno">
-        <button class="saveBtn" type="button">Ulož skóre</button>
-        <p class="small saveMsg"></p>
-      </div>
+      <div class="finishBox">
+          <input class="nameIn" maxlength="30" placeholder="Tvoje meno">
+          <label class="rsvpLabel"><input type="checkbox" class="rsvpCheck"> Idem na párty</label>
+          <button class="saveBtn" type="button">Ulož skóre</button>
+          <p class="small saveMsg"></p>
+        </div>
       <button class="ghost" id="again" type="button">Hrať znova</button>
     </div>
   </div>
@@ -231,10 +245,10 @@ body.playing { touch-action: none; user-select: none; -webkit-user-select: none;
     document.getElementById('hint').hidden = true;
     document.getElementById('dress').hidden = true;
     document.getElementById('board').hidden = true;
+    document.getElementById('guests').hidden = true;
     document.body.classList.add('playing');
     scoreSaved = false;
-    document.querySelectorAll('.saveBox').forEach(function (b) { b.hidden = false; });
-    document.querySelectorAll('.saveMsg').forEach(function (m) { m.textContent = ''; });
+    resetFinish();
     document.getElementById('stage').hidden = false;
   }
 
@@ -541,10 +555,25 @@ body.playing { touch-action: none; user-select: none; -webkit-user-select: none;
     }
   }
 
-  async function saveScore(box) {
-    var input = box.querySelector('.nameIn');
+  var RSVP_URL = SB_URL.replace('/scores', '/rsvps');
+
+  function resetFinish() {
+    document.querySelectorAll('.finishBox').forEach(function (b) {
+      b.hidden = false;
+      b.querySelector('.nameIn').value = '';
+      b.querySelector('.rsvpCheck').checked = false;
+      b.querySelector('.saveBtn').disabled = false;
+      b.querySelector('.saveMsg').textContent = '';
+    });
+  }
+
+  async function saveFinish(box) {
+    var name = (box.querySelector('.nameIn').value || '').trim().slice(0, 30);
+    var going = box.querySelector('.rsvpCheck').checked;
     var msg = box.querySelector('.saveMsg');
-    var name = (input.value || '').trim().slice(0, 12) || 'Hráč';
+    var btn = box.querySelector('.saveBtn');
+    if (!name) { msg.textContent = 'Napíš svoje meno.'; return; }
+    btn.disabled = true;
     try {
       var r = await fetch(SB_URL, {
         method: 'POST',
@@ -552,18 +581,55 @@ body.playing { touch-action: none; user-select: none; -webkit-user-select: none;
         body: JSON.stringify({ name: name, score: Math.floor(score) })
       });
       if (!r.ok) throw new Error('save');
-      scoreSaved = true;
-      document.querySelectorAll('.saveBox').forEach(function (b) { b.hidden = true; });
-      loadBoard();
     } catch (e) {
+      btn.disabled = false;
       msg.textContent = 'Nepodarilo sa uložiť, skús znova.';
+      return;
+    }
+    if (going) {
+      try {
+        var q = await fetch(RSVP_URL, {
+          method: 'POST',
+          headers: Object.assign({ 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, SB_HEADERS),
+          body: JSON.stringify({ name: name })
+        });
+        if (q.status === 409) msg.textContent = 'Skóre uložené. Už si v zozname.';
+        else if (!q.ok) msg.textContent = 'Skóre uložené, účasť sa nepodarilo.';
+        else msg.textContent = 'Uložené. Vidíme sa v JAME!';
+      } catch (e) {
+        msg.textContent = 'Skóre uložené, účasť sa nepodarilo.';
+      }
+    } else {
+      msg.textContent = 'Skóre uložené.';
+    }
+    setTimeout(function () { window.location.reload(); }, 1500);
+  }
+
+  async function loadGuests() {
+    var list = document.getElementById('guestList');
+    var msg = document.getElementById('guestMsg');
+    try {
+      var r = await fetch('https://bodldccrqismqcbtnsqc.supabase.co/rest/v1/rsvps?select=name&order=created_at.asc', { headers: SB_HEADERS });
+      if (!r.ok) throw new Error('guests');
+      var rows = await r.json();
+      list.textContent = '';
+      if (!rows.length) { msg.textContent = 'Zatiaľ nikto. Buď prvý!'; return; }
+      msg.textContent = '';
+      rows.forEach(function (v) {
+        var li = document.createElement('li');
+        li.textContent = v.name;
+        list.appendChild(li);
+      });
+    } catch (e) {
+      msg.textContent = 'Zoznam sa nepodarilo načítať.';
     }
   }
 
   document.querySelectorAll('.saveBtn').forEach(function (btn) {
-    btn.addEventListener('click', function () { saveScore(btn.closest('.saveBox')); });
+    btn.addEventListener('click', function () { saveFinish(btn.closest('.finishBox')); });
   });
   loadBoard();
+  loadGuests();
 
   document.getElementById('start').addEventListener('click', start);
   document.getElementById('retry').addEventListener('click', start);
