@@ -237,7 +237,7 @@ body.playing { touch-action: none; user-select: none; -webkit-user-select: none;
   function jump() {
     if (state !== 'play') return;
     if (player.onGround) {
-      player.vy = -12;
+      player.vy = -13.5;
       player.onGround = false;
     }
   }
@@ -282,7 +282,7 @@ body.playing { touch-action: none; user-select: none; -webkit-user-select: none;
       if (nextOb <= 0) {
         var kind = Math.random() < 0.6 ? 'cone' : 'bench';
         var w = kind === 'cone' ? 16 : 46;
-        var h = kind === 'cone' ? 22 : 26;
+        var h = kind === 'cone' ? 22 : 20;
         obstacles.push({ x: W + 10, w: w, h: h, kind: kind });
         nextOb = (290 + Math.random() * 130) / speed;
       }
