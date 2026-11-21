@@ -65,6 +65,14 @@ h2 { font-size: clamp(28px, 7vw, 44px); color: var(--orange); text-shadow: 3px 3
 .cue { position: absolute; left: 72%; top: 24%; background: var(--orange); color: #000; font: 700 13px "Space Mono", monospace; text-transform: uppercase; letter-spacing: .06em; padding: 4px 8px; pointer-events: none; box-shadow: 3px 3px 0 #000; }
 .dress { margin: 0; padding: 10px 12px; background: var(--orange); color: #000; text-align: center; font: 700 14px "Space Mono", monospace; text-transform: uppercase; letter-spacing: .08em; box-shadow: 6px 6px 0 var(--orange-dim); }
 .dress b { font-family: "Anton", Impact, sans-serif; font-weight: 400; font-size: 22px; letter-spacing: .04em; display: block; }
+.board { width: 100%; max-width: 480px; border: 2px solid var(--orange); background: #151110; padding: 12px 14px; box-sizing: border-box; }
+.board h2 { font-size: 26px; text-align: left; }
+.board ol { margin: 8px 0 0; padding: 0; list-style: none; }
+.board li { padding: 6px 0; border-bottom: 1px dashed #2a2420; display: flex; justify-content: space-between; gap: 8px; }
+.board .msg { color: var(--mute, #8a7f74); font-size: 12px; margin: 8px 0 0; }
+.saveBox { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; }
+.saveBox[hidden] { display: none; }
+.nameIn { font: 700 14px "Space Mono", monospace; width: 220px; max-width: 100%; padding: 10px; background: #0d0b09; color: var(--fg); border: 2px solid var(--orange); }
 .curve { position: absolute; left: 80%; top: 30%; width: 22%; height: auto; overflow: visible; pointer-events: none; }
 .curve path, .curve polyline { fill: none; stroke: var(--orange); stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(2px 2px 0 #000); }
 @media (prefers-reduced-motion: reduce) { .press::before { animation: none; } }
@@ -122,6 +130,7 @@ button:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; }
   margin-top: 4px;
 }
 .hint { font-size: 12px; color: var(--mute, #8a7f74); text-align: center; }
+body.playing { touch-action: none; user-select: none; -webkit-user-select: none; }
 </style>
 </head>
 <body>
@@ -140,12 +149,23 @@ button:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; }
   <p class="dress" id="dress"><b>Dress code</b>Štýl 2000 · skate · oversize · flanel · šiltovka</p>
   <p class="hint" id="hint">Klikni, ťukni alebo stlač medzerník na skok. Zober 1UP a dostaň sa k dverám.</p>
 
+  <section class="board" id="board">
+    <h2>Top hráči</h2>
+    <ol id="list"></ol>
+    <p class="msg" id="boardMsg">Načítavam…</p>
+  </section>
+
   <div class="stage" id="stage" hidden>
     <canvas id="c" aria-label="Road to Jama minigame"></canvas>
 
     <div class="overlay" id="over" hidden>
       <h2>Spadol si</h2>
       <p class="small" id="overScore"></p>
+      <div class="saveBox">
+        <input class="nameIn" maxlength="12" placeholder="Tvoje meno">
+        <button class="saveBtn" type="button">Ulož skóre</button>
+        <p class="small saveMsg"></p>
+      </div>
       <button id="retry" type="button">Skúsiť znova</button>
     </div>
 
@@ -157,6 +177,11 @@ button:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; }
         <span>Klub JAMA</span>
       </div>
       <p class="rsvp">Potvrď mi účasť</p>
+      <div class="saveBox">
+        <input class="nameIn" maxlength="12" placeholder="Tvoje meno">
+        <button class="saveBtn" type="button">Ulož skóre</button>
+        <p class="small saveMsg"></p>
+      </div>
       <button class="ghost" id="again" type="button">Hrať znova</button>
     </div>
   </div>
@@ -201,6 +226,11 @@ button:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; }
     document.getElementById('welcome').hidden = true;
     document.getElementById('hint').hidden = true;
     document.getElementById('dress').hidden = true;
+    document.getElementById('board').hidden = true;
+    document.body.classList.add('playing');
+    scoreSaved = false;
+    document.querySelectorAll('.saveBox').forEach(function (b) { b.hidden = false; });
+    document.querySelectorAll('.saveMsg').forEach(function (m) { m.textContent = ''; });
     document.getElementById('stage').hidden = false;
   }
 
@@ -253,12 +283,12 @@ button:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; }
         var w = kind === 'cone' ? 22 : 46;
         var h = kind === 'cone' ? 30 : 26;
         obstacles.push({ x: W + 10, w: w, h: h, kind: kind });
-        nextOb = 70 + Math.random() * 70 - Math.min(30, speed * 3);
+        nextOb = (260 + Math.random() * 160) / speed;
       }
       nextPu--;
       if (nextPu <= 0) {
         pickups.push({ x: W + 10, y: GY - 60 - Math.random() * 60, got: false });
-        nextPu = 110 + Math.random() * 90;
+        nextPu = 55 + Math.random() * 45;
       }
     }
 
@@ -452,17 +482,71 @@ button:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; }
     if (e) e.preventDefault();
     if (state === 'play') jump();
   }
-  cv.addEventListener('pointerdown', onPress);
-  document.getElementById('stage').addEventListener('pointerdown', function (e) {
-    if (e.target.tagName === 'BUTTON') return;
-    if (state === 'play') onPress(e);
-  });
+  document.addEventListener('pointerdown', function (e) {
+    if (state !== 'play') return;
+    if (e.target.closest && e.target.closest('button')) return;
+    e.preventDefault();
+    jump();
+  }, { passive: false });
   window.addEventListener('keydown', function (e) {
     if (e.code === 'Space' || e.code === 'ArrowUp') {
       e.preventDefault();
       if (state === 'play') jump();
     }
   });
+
+  var scoreSaved = false;
+  var SB_URL = 'https://bodldccrqismqcbtnsqc.supabase.co/rest/v1/scores';
+  var SB_KEY = 'sb_publishable_rfMmmN20j-CCF4_FLzne4Q_g6CH_GAe';
+  var SB_HEADERS = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY };
+
+  async function loadBoard() {
+    var list = document.getElementById('list');
+    var msg = document.getElementById('boardMsg');
+    try {
+      var r = await fetch(SB_URL + '?select=name,score&order=score.desc&limit=10', { headers: SB_HEADERS });
+      if (!r.ok) throw new Error('load');
+      var rows = await r.json();
+      list.textContent = '';
+      if (!rows.length) { msg.textContent = 'Zatiaľ žiadne skóre. Buď prvý!'; return; }
+      msg.textContent = '';
+      rows.forEach(function (v, i) {
+        var li = document.createElement('li');
+        var a = document.createElement('span');
+        var b = document.createElement('strong');
+        a.textContent = (i + 1) + '. ' + (v.name || 'Hráč');
+        b.textContent = v.score;
+        li.appendChild(a); li.appendChild(b);
+        list.appendChild(li);
+      });
+    } catch (e) {
+      msg.textContent = 'Tabuľku sa nepodarilo načítať.';
+    }
+  }
+
+  async function saveScore(box) {
+    var input = box.querySelector('.nameIn');
+    var msg = box.querySelector('.saveMsg');
+    var name = (input.value || '').trim().slice(0, 12) || 'Hráč';
+    try {
+      var r = await fetch(SB_URL, {
+        method: 'POST',
+        headers: Object.assign({ 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, SB_HEADERS),
+        body: JSON.stringify({ name: name, score: score })
+      });
+      if (!r.ok) throw new Error('save');
+      scoreSaved = true;
+      document.querySelectorAll('.saveBox').forEach(function (b) { b.hidden = true; });
+      loadBoard();
+    } catch (e) {
+      msg.textContent = 'Nepodarilo sa uložiť, skús znova.';
+    }
+  }
+
+  document.querySelectorAll('.saveBtn').forEach(function (btn) {
+    btn.addEventListener('click', function () { saveScore(btn.closest('.saveBox')); });
+  });
+  loadBoard();
 
   document.getElementById('start').addEventListener('click', start);
   document.getElementById('retry').addEventListener('click', start);
