@@ -280,10 +280,10 @@ body.playing { touch-action: none; user-select: none; -webkit-user-select: none;
       nextOb--;
       if (nextOb <= 0) {
         var kind = Math.random() < 0.6 ? 'cone' : 'bench';
-        var w = kind === 'cone' ? 22 : 46;
-        var h = kind === 'cone' ? 30 : 26;
+        var w = kind === 'cone' ? 16 : 46;
+        var h = kind === 'cone' ? 22 : 26;
         obstacles.push({ x: W + 10, w: w, h: h, kind: kind });
-        nextOb = (320 + Math.random() * 160) / speed;
+        nextOb = (290 + Math.random() * 130) / speed;
       }
       nextPu--;
       if (nextPu <= 0) {
@@ -304,7 +304,7 @@ body.playing { touch-action: none; user-select: none; -webkit-user-select: none;
     }
 
     // collisions
-    var px1 = 66, px2 = 100;
+    var px1 = 74, px2 = 96;
     var py1 = player.y - 34, py2 = player.y;
     if (invuln > 0) invuln--;
     if (invuln === 0) {
@@ -372,7 +372,7 @@ body.playing { touch-action: none; user-select: none; -webkit-user-select: none;
     ctx.lineTo(x, GY);
     ctx.closePath(); ctx.fill();
     ctx.fillStyle = '#f4ece0';
-    ctx.fillRect(x + 5, y + 12, o.w - 10, 4);
+    ctx.fillRect(x + 3, y + 9, o.w - 6, 3);
     ctx.fillStyle = '#0d0b09';
     ctx.fillRect(x - 2, GY - 2, o.w + 4, 2);
   }
