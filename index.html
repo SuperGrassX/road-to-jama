@@ -535,9 +535,16 @@ body.playing { touch-action: none; user-select: none; -webkit-user-select: none;
     var list = document.getElementById('list');
     var msg = document.getElementById('boardMsg');
     try {
-      var r = await fetch(SB_URL + '?select=name,score&order=score.desc&limit=10', { headers: SB_HEADERS });
+      var r = await fetch(SB_URL + '?select=name,score&order=score.desc&limit=200', { headers: SB_HEADERS });
       if (!r.ok) throw new Error('load');
       var rows = await r.json();
+      var seen = {};
+      rows = rows.filter(function (v) {
+        var k = (v.name || '').toLowerCase();
+        if (seen[k]) return false;
+        seen[k] = true;
+        return true;
+      }).slice(0, 10);
       list.textContent = '';
       if (!rows.length) { msg.textContent = 'Zatiaľ žiadne skóre. Buď prvý!'; return; }
       msg.textContent = '';
@@ -574,17 +581,27 @@ body.playing { touch-action: none; user-select: none; -webkit-user-select: none;
     var btn = box.querySelector('.saveBtn');
     if (!name) { msg.textContent = 'Napíš svoje meno.'; return; }
     btn.disabled = true;
+    var newScore = Math.floor(score);
+    var best = null;
     try {
-      var r = await fetch(SB_URL, {
-        method: 'POST',
-        headers: Object.assign({ 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, SB_HEADERS),
-        body: JSON.stringify({ name: name, score: Math.floor(score) })
-      });
-      if (!r.ok) throw new Error('save');
-    } catch (e) {
-      btn.disabled = false;
-      msg.textContent = 'Nepodarilo sa uložiť, skús znova.';
-      return;
+      var b = await fetch(SB_URL + '?select=score&name=eq.' + encodeURIComponent(name) + '&order=score.desc&limit=1', { headers: SB_HEADERS });
+      if (b.ok) { var prev = await b.json(); if (prev.length) best = prev[0].score; }
+    } catch (e) {}
+    var keep = best !== null && best >= newScore;
+    var scoreNote = keep ? 'Tvoje najlepšie skóre zostáva ' + best + '. ' : '';
+    if (!keep) {
+      try {
+        var r = await fetch(SB_URL, {
+          method: 'POST',
+          headers: Object.assign({ 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, SB_HEADERS),
+          body: JSON.stringify({ name: name, score: newScore })
+        });
+        if (!r.ok) throw new Error('save');
+      } catch (e) {
+        btn.disabled = false;
+        msg.textContent = 'Nepodarilo sa uložiť, skús znova.';
+        return;
+      }
     }
     if (going) {
       try {
@@ -593,16 +610,16 @@ body.playing { touch-action: none; user-select: none; -webkit-user-select: none;
           headers: Object.assign({ 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, SB_HEADERS),
           body: JSON.stringify({ name: name })
         });
-        if (q.status === 409) msg.textContent = 'Skóre uložené. Už si v zozname.';
+        if (q.status === 409) msg.textContent = scoreNote + 'Už si v zozname.';
         else if (!q.ok) msg.textContent = 'Skóre uložené, účasť sa nepodarilo.';
-        else msg.textContent = 'Uložené. Vidíme sa v JAME!';
+        else msg.textContent = scoreNote + 'Uložené. Vidíme sa v JAME!';
       } catch (e) {
         msg.textContent = 'Skóre uložené, účasť sa nepodarilo.';
       }
     } else {
-      msg.textContent = 'Skóre uložené.';
+      msg.textContent = scoreNote + 'Skóre uložené.';
     }
-    setTimeout(function () { window.location.reload(); }, 1500);
+    setTimeout(function () { window.location.reload(); }, 2500);
   }
 
   async function loadGuests() {
