@@ -205,7 +205,7 @@ body.playing { touch-action: none; user-select: none; -webkit-user-select: none;
   var best = 0;
 
   function reset() {
-    dist = 0; speed = 3; score = 0; lives = 3;
+    dist = 0; speed = 2.5; score = 0; lives = 3;
     obstacles = []; pickups = []; popups = [];
     nextOb = 60; nextPu = 90;
     doorShown = false; doorX = W + 60;
@@ -262,7 +262,7 @@ body.playing { touch-action: none; user-select: none; -webkit-user-select: none;
   function update() {
     frame++;
     dist += speed;
-    speed = Math.min(5.5, 3 + dist / 1500);
+    speed = Math.min(4.5, 2.5 + dist / 2000);
 
     if (!doorShown && dist >= GOAL) { doorShown = true; }
     if (doorShown) {
@@ -283,7 +283,7 @@ body.playing { touch-action: none; user-select: none; -webkit-user-select: none;
         var w = kind === 'cone' ? 22 : 46;
         var h = kind === 'cone' ? 30 : 26;
         obstacles.push({ x: W + 10, w: w, h: h, kind: kind });
-        nextOb = (260 + Math.random() * 160) / speed;
+        nextOb = (320 + Math.random() * 160) / speed;
       }
       nextPu--;
       if (nextPu <= 0) {
