@@ -237,7 +237,7 @@ body.playing { touch-action: none; user-select: none; -webkit-user-select: none;
   function jump() {
     if (state !== 'play') return;
     if (player.onGround) {
-      player.vy = -15;
+      player.vy = -12;
       player.onGround = false;
     }
   }
@@ -248,13 +248,14 @@ body.playing { touch-action: none; user-select: none; -webkit-user-select: none;
     if (lives <= 0) {
       state = 'over';
       best = Math.max(best, score);
-      overScore.textContent = 'Skóre: ' + score + (best > score ? ' · Najlepšie: ' + best : ' · Nový rekord');
+      overScore.textContent = 'Skóre: ' + Math.floor(score) + (best > score ? ' · Najlepšie: ' + best : ' · Nový rekord');
       show(over);
     }
   }
 
   function win_() {
     state = 'win';
+    score += 1000;
     best = Math.max(best, score);
     show(win);
   }
@@ -271,7 +272,7 @@ body.playing { touch-action: none; user-select: none; -webkit-user-select: none;
     }
 
     // player physics
-    player.vy += 0.7;
+    player.vy += (holding && player.vy < 0) ? 0.45 : 0.7;
     player.y += player.vy;
     if (player.y >= GY) { player.y = GY; player.vy = 0; player.onGround = true; }
 
@@ -304,7 +305,7 @@ body.playing { touch-action: none; user-select: none; -webkit-user-select: none;
     }
 
     // collisions
-    var px1 = 0, px2 = 24;
+    var px1 = 70, px2 = 104;
     var py1 = player.y - 34, py2 = player.y;
     if (invuln > 0) invuln--;
     if (invuln === 0) {
@@ -330,7 +331,7 @@ body.playing { touch-action: none; user-select: none; -webkit-user-select: none;
       popups[n].t--; popups[n].y -= 0.6;
       if (popups[n].t <= 0) popups.splice(n, 1);
     }
-    score += 1;
+    score += speed / 10;
   }
 
   function drawSkater() {
@@ -458,7 +459,7 @@ body.playing { touch-action: none; user-select: none; -webkit-user-select: none;
     // HUD
     ctx.fillStyle = '#f4ece0';
     ctx.font = '700 14px "Space Mono", monospace';
-    ctx.fillText('Skóre ' + score, 12, 22);
+    ctx.fillText('Skóre ' + Math.floor(score), 12, 22);
     ctx.textAlign = 'right';
     ctx.fillText('Životy ' + lives, W - 12, 22);
     ctx.textAlign = 'left';
@@ -482,17 +483,29 @@ body.playing { touch-action: none; user-select: none; -webkit-user-select: none;
     if (e) e.preventDefault();
     if (state === 'play') jump();
   }
+  var holding = false;
+  function release() {
+    holding = false;
+  }
   document.addEventListener('pointerdown', function (e) {
     if (state !== 'play') return;
     if (e.target.closest && e.target.closest('button')) return;
     e.preventDefault();
+    holding = true;
     jump();
   }, { passive: false });
+  document.addEventListener('pointerup', release);
+  document.addEventListener('pointercancel', release);
   window.addEventListener('keydown', function (e) {
     if (e.code === 'Space' || e.code === 'ArrowUp') {
       e.preventDefault();
+      if (e.repeat) return;
+      holding = true;
       if (state === 'play') jump();
     }
+  });
+  window.addEventListener('keyup', function (e) {
+    if (e.code === 'Space' || e.code === 'ArrowUp') release();
   });
 
   var scoreSaved = false;
@@ -532,7 +545,7 @@ body.playing { touch-action: none; user-select: none; -webkit-user-select: none;
       var r = await fetch(SB_URL, {
         method: 'POST',
         headers: Object.assign({ 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, SB_HEADERS),
-        body: JSON.stringify({ name: name, score: score })
+        body: JSON.stringify({ name: name, score: Math.floor(score) })
       });
       if (!r.ok) throw new Error('save');
       scoreSaved = true;
